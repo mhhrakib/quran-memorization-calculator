@@ -418,6 +418,16 @@ footer {
     color: var(--text-muted);
 }
 
+.hidden {
+    display: none;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-muted);
+}
+
 @keyframes fadeIn {
     from {
         opacity: 0;

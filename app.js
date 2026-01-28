@@ -11,7 +11,10 @@ const TOTAL_CHARS = 330709;
 
 // Initialize the app
 async function init() {
-    await loadQuranData();
+    const loaded = await loadQuranData();
+    if (!loaded) {
+        return; // Stop initialization if data failed to load
+    }
     loadProgressFromStorage();
     setupEventListeners();
     populateSurahSelect();
@@ -22,12 +25,22 @@ async function init() {
 async function loadQuranData() {
     try {
         const response = await fetch('quran-simple.json');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         quranData = await response.json();
+        if (!quranData || quranData.length !== 114) {
+            throw new Error('Invalid Quran data format');
+        }
         console.log('Quran data loaded:', quranData.length, 'surahs');
     } catch (error) {
         console.error('Error loading Quran data:', error);
         alert('Failed to load Quran data. Please refresh the page.');
+        // Prevent further operations
+        document.getElementById('addSurahBtn').disabled = true;
+        return false;
     }
+    return true;
 }
 
 // Setup event listeners
@@ -85,6 +98,13 @@ function setupEventListeners() {
             closeModal();
         }
     });
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && document.getElementById('surahModal').classList.contains('show')) {
+            closeModal();
+        }
+    });
 }
 
 // Populate surah select dropdown
@@ -103,12 +123,20 @@ function updateSurahInfo(surahId) {
     const surah = quranData[surahId - 1];
     document.getElementById('totalVerses').textContent = surah.total_verses;
     document.getElementById('surahType').textContent = surah.type.charAt(0).toUpperCase() + surah.type.slice(1);
-    document.getElementById('surahInfo').style.display = 'block';
+    document.getElementById('surahInfo').classList.remove('hidden');
 }
 
 // Parse ayah range string
 function getAyahList(surahId, ayahString) {
+    if (!surahId || surahId < 1 || surahId > 114) {
+        console.error('Invalid surah ID:', surahId);
+        return [];
+    }
     const surah = quranData[surahId - 1];
+    if (!surah) {
+        console.error('Surah not found:', surahId);
+        return [];
+    }
     const totalAyah = surah.total_verses;
     
     if (ayahString === 'F' || ayahString === 'f') {
@@ -152,7 +180,7 @@ function getSurahByAyah(surahId, ayahList) {
         const verse = surah.verses[ayahNum - 1];
         if (verse) {
             const text = verse.text;
-            words += text.split(' ').length;
+            words += text.split(/\s+/).filter(word => word.length > 0).length;
             chars += text.replace(/ /g, '').length;
         }
     }
@@ -168,7 +196,7 @@ function getFullSurahStats(surahId) {
     
     for (const verse of surah.verses) {
         const text = verse.text;
-        words += text.split(' ').length;
+        words += text.split(/\s+/).filter(word => word.length > 0).length;
         chars += text.replace(/ /g, '').length;
     }
     
@@ -252,7 +280,7 @@ function updateSurahList() {
     const entries = Object.entries(currentData).filter(([_, value]) => value !== '0');
     
     if (entries.length === 0) {
-        surahList.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">No progress added yet. Click "Add Surah" to get started!</div>';
+        surahList.innerHTML = '<div class="empty-state">No progress added yet. Click "Add Surah" to get started!</div>';
         return;
     }
     
@@ -282,8 +310,15 @@ function updateSurahList() {
             <div class="surah-progress">
                 <div class="surah-percent">${percent.avg.toFixed(1)}%</div>
             </div>
-            <button class="delete-btn" onclick="deleteSurah(${surah.id})">🗑️</button>
+            <button class="delete-btn" aria-label="Delete surah ${surah.transliteration}" data-surah-id="${surah.id}">🗑️</button>
         `;
+        
+        // Attach delete event listener
+        const deleteBtn = surahItem.querySelector('.delete-btn');
+        deleteBtn.addEventListener('click', (e) => {
+            const surahId = parseInt(e.currentTarget.getAttribute('data-surah-id'));
+            deleteSurah(surahId);
+        });
         
         surahList.appendChild(surahItem);
     }
@@ -294,7 +329,12 @@ function openModal() {
     document.getElementById('surahModal').classList.add('show');
     document.getElementById('surahSelect').value = '';
     document.getElementById('ayahRange').value = '';
-    document.getElementById('surahInfo').style.display = 'none';
+    document.getElementById('surahInfo').classList.add('hidden');
+    
+    // Set focus to surah select for accessibility
+    setTimeout(() => {
+        document.getElementById('surahSelect').focus();
+    }, 100);
 }
 
 // Close modal
@@ -373,7 +413,8 @@ function exportData() {
     link.href = url;
     link.download = `quran-progress-${new Date().toISOString().split('T')[0]}.json`;
     link.click();
-    URL.revokeObjectURL(url);
+    // Delay revoking URL to ensure download completes
+    setTimeout(() => URL.revokeObjectURL(url), 100);
 }
 
 // Import data
