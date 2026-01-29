@@ -5,27 +5,29 @@
 }
 
 :root {
-    --primary-color: #16a085;
-    --secondary-color: #27ae60;
-    --accent-color: #2980b9;
-    --dark-bg: #1a1a2e;
-    --card-bg: #16213e;
-    --text-light: #ecf0f1;
-    --text-muted: #95a5a6;
-    --success: #27ae60;
-    --danger: #e74c3c;
-    --warning: #f39c12;
-    --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    --gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    --shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    --primary-color: #0d7a5f;
+    --secondary-color: #2d8b6e;
+    --accent-color: #45a083;
+    --bg-light: #f0f9f6;
+    --bg-lighter: #f8fbfa;
+    --text-dark: #1a3d32;
+    --text-light: #f5f5f5;
+    --text-muted: #5a7a6f;
+    --border-color: #c8e6dd;
+    --success: #2d8b6e;
+    --danger: #d9534f;
+    --warning: #f0ad4e;
+    --gradient-1: linear-gradient(135deg, #0d7a5f 0%, #2d8b6e 100%);
+    --gradient-2: linear-gradient(135deg, #2d8b6e 0%, #45a083 100%);
+    --gradient-3: linear-gradient(135deg, #0d7a5f 0%, #45a083 100%);
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%);
+    background: linear-gradient(to bottom, #e8f5f1 0%, #d4ebe3 100%);
     min-height: 100vh;
-    color: var(--text-light);
+    color: var(--text-dark);
     padding: 20px;
 }
 
@@ -44,10 +46,7 @@ header {
 header h1 {
     font-size: 3em;
     margin-bottom: 10px;
-    background: var(--gradient-3);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--primary-color);
 }
 
 .subtitle {
@@ -66,23 +65,25 @@ header h1 {
 .mode-btn {
     padding: 15px 40px;
     font-size: 1.1em;
-    border: none;
-    border-radius: 50px;
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--text-light);
+    border: 2px solid var(--primary-color);
+    border-radius: 25px;
+    background: white;
+    color: var(--primary-color);
     cursor: pointer;
     transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
 }
 
 .mode-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--bg-light);
     transform: translateY(-2px);
+    box-shadow: var(--shadow);
 }
 
 .mode-btn.active {
     background: var(--gradient-1);
-    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    color: white;
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(13, 122, 95, 0.3);
 }
 
 .stats-overview {
@@ -94,27 +95,24 @@ header h1 {
 }
 
 .stat-card {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
+    background: white;
+    border-radius: 15px;
     padding: 30px;
     text-align: center;
     transition: all 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 2px solid var(--border-color);
+    box-shadow: var(--shadow);
 }
 
 .stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(13, 122, 95, 0.2);
 }
 
 .stat-value {
     font-size: 2.5em;
     font-weight: bold;
-    background: var(--gradient-3);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--primary-color);
     margin-bottom: 10px;
 }
 
@@ -130,11 +128,11 @@ header h1 {
 
 .progress-bar {
     height: 40px;
-    background: rgba(255, 255, 255, 0.1);
+    background: white;
     border-radius: 20px;
     overflow: hidden;
     position: relative;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 2px solid var(--border-color);
 }
 
 .progress-fill {
@@ -153,7 +151,7 @@ header h1 {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
     animation: shimmer 2s infinite;
 }
 
@@ -182,7 +180,7 @@ header h1 {
     padding: 12px 30px;
     font-size: 1em;
     border: none;
-    border-radius: 50px;
+    border-radius: 25px;
     cursor: pointer;
     transition: all 0.3s ease;
     font-weight: 600;
@@ -191,22 +189,24 @@ header h1 {
 .btn-primary {
     background: var(--gradient-1);
     color: white;
+    box-shadow: 0 4px 12px rgba(13, 122, 95, 0.3);
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 6px 16px rgba(13, 122, 95, 0.4);
 }
 
 .btn-secondary {
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--text-light);
-    backdrop-filter: blur(10px);
+    background: white;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
 }
 
 .btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--bg-light);
     transform: translateY(-2px);
+    box-shadow: var(--shadow);
 }
 
 .surah-list {
@@ -216,21 +216,22 @@ header h1 {
 }
 
 .surah-item {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border-radius: 15px;
+    background: white;
+    border-radius: 12px;
     padding: 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     transition: all 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 2px solid var(--border-color);
     animation: slideIn 0.5s ease;
+    box-shadow: var(--shadow);
 }
 
 .surah-item:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: var(--bg-lighter);
     transform: translateX(5px);
+    box-shadow: 0 6px 12px rgba(13, 122, 95, 0.15);
 }
 
 .surah-info-left {
@@ -254,6 +255,7 @@ header h1 {
     font-size: 1.3em;
     font-weight: 600;
     margin-bottom: 5px;
+    color: var(--primary-color);
 }
 
 .surah-details {
@@ -269,10 +271,7 @@ header h1 {
 .surah-percent {
     font-size: 1.5em;
     font-weight: bold;
-    background: var(--gradient-3);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--secondary-color);
 }
 
 .delete-btn {
@@ -300,8 +299,7 @@ header h1 {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(5px);
+    background: rgba(10, 61, 47, 0.85);
     z-index: 1000;
     animation: fadeIn 0.3s ease;
 }
@@ -313,14 +311,14 @@ header h1 {
 }
 
 .modal-content {
-    background: var(--card-bg);
-    border-radius: 20px;
+    background: white;
+    border-radius: 15px;
     width: 90%;
     max-width: 500px;
     max-height: 90vh;
     overflow: auto;
     animation: slideUp 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 2px solid var(--border-color);
 }
 
 .modal-header {
@@ -328,18 +326,19 @@ header h1 {
     justify-content: space-between;
     align-items: center;
     padding: 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 2px solid #e8f5f1;
 }
 
 .modal-header h2 {
     margin: 0;
+    color: var(--primary-color);
 }
 
 .close-btn {
     background: none;
     border: none;
     font-size: 2em;
-    color: var(--text-light);
+    color: var(--text-muted);
     cursor: pointer;
     transition: all 0.3s ease;
 }
@@ -361,15 +360,16 @@ header h1 {
     display: block;
     margin-bottom: 8px;
     font-weight: 600;
+    color: var(--primary-color);
 }
 
 .form-control {
     width: 100%;
     padding: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--text-light);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    background: white;
+    color: var(--text-dark);
     font-size: 1em;
     transition: all 0.3s ease;
 }
@@ -377,12 +377,13 @@ header h1 {
 .form-control:focus {
     outline: none;
     border-color: var(--primary-color);
-    background: rgba(255, 255, 255, 0.15);
+    background: var(--bg-lighter);
+    box-shadow: 0 0 0 3px rgba(13, 122, 95, 0.1);
 }
 
 .form-control option {
-    background: var(--card-bg);
-    color: var(--text-light);
+    background: white;
+    color: var(--text-dark);
 }
 
 .help-text {
@@ -393,14 +394,16 @@ header h1 {
 }
 
 .surah-info {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-light);
     padding: 15px;
-    border-radius: 10px;
+    border-radius: 8px;
     margin-top: 15px;
+    border: 1px solid var(--border-color);
 }
 
 .surah-info p {
     margin: 5px 0;
+    color: var(--text-dark);
 }
 
 .modal-footer {
@@ -408,7 +411,7 @@ header h1 {
     justify-content: flex-end;
     gap: 10px;
     padding: 20px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 2px solid #e8f5f1;
 }
 
 footer {
