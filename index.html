@@ -14,8 +14,8 @@
         </header>
 
         <div class="mode-selector">
-            <button class="mode-btn active" data-mode="memorization">🧠 Memorization</button>
-            <button class="mode-btn" data-mode="reading">📚 Reading</button>
+            <button class="mode-btn active" data-mode="memorization" aria-pressed="true">🧠 Memorization</button>
+            <button class="mode-btn" data-mode="reading" aria-pressed="false">📚 Reading</button>
         </div>
 
         <div class="stats-overview">
@@ -34,7 +34,7 @@
         </div>
 
         <div class="progress-bar-container">
-            <div class="progress-bar" id="progressBar">
+            <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="progressBar">
                 <div class="progress-fill" id="progressFill"></div>
             </div>
             <div class="progress-text" id="progressText">0 of 114 Surahs</div>

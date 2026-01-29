@@ -79,6 +79,11 @@ header h1 {
     box-shadow: var(--shadow);
 }
 
+.mode-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(13, 122, 95, 0.3);
+}
+
 .mode-btn.active {
     background: var(--gradient-1);
     color: white;
@@ -186,6 +191,11 @@ header h1 {
     font-weight: 600;
 }
 
+.btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(13, 122, 95, 0.3);
+}
+
 .btn-primary {
     background: var(--gradient-1);
     color: white;
@@ -264,7 +274,10 @@ header h1 {
 }
 
 .surah-checkbox {
-    display: none;
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
 }
 
 .checkbox-label {
@@ -292,6 +305,13 @@ header h1 {
 .checkbox-label:hover {
     background: var(--bg-light);
     transform: scale(1.05);
+}
+
+.checkbox-label:focus,
+.surah-checkbox:focus + .checkbox-label {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px rgba(13, 122, 95, 0.2);
 }
 
 .surah-info-container {

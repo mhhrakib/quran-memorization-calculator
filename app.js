@@ -35,8 +35,6 @@ async function loadQuranData() {
     } catch (error) {
         console.error('Error loading Quran data:', error);
         alert('Failed to load Quran data. Please refresh the page.');
-        // Prevent further operations
-        document.getElementById('addSurahBtn').disabled = true;
         return false;
     }
     return true;
@@ -47,8 +45,12 @@ function setupEventListeners() {
     // Mode selector
     document.querySelectorAll('.mode-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.mode-btn').forEach(b => {
+                b.classList.remove('active');
+                b.setAttribute('aria-pressed', 'false');
+            });
             btn.classList.add('active');
+            btn.setAttribute('aria-pressed', 'true');
             currentMode = btn.dataset.mode;
             updateUI();
         });
@@ -212,7 +214,9 @@ function updateUI() {
     document.getElementById('charsPercent').textContent = stats.chars.toFixed(2) + '%';
     
     // Update progress bar
+    const progressBar = document.getElementById('progressBar');
     document.getElementById('progressFill').style.width = stats.avg + '%';
+    progressBar.setAttribute('aria-valuenow', Math.round(stats.avg));
     document.getElementById('progressText').textContent = `${stats.completedSurahs} of 114 Surahs`;
     
     // Update surah list
@@ -246,7 +250,7 @@ function updateSurahList() {
                        ${isFullyMemorized ? 'checked' : ''}
                        data-surah-id="${surahId}"
                        aria-label="Mark ${surah.transliteration} as fully memorized">
-                <label for="checkbox-${surahId}" class="checkbox-label">✓</label>
+                <label for="checkbox-${surahId}" class="checkbox-label" tabindex="0" role="checkbox" aria-checked="${isFullyMemorized}">✓</label>
             </div>
             <div class="surah-info-container">
                 <div class="surah-header">
@@ -265,6 +269,7 @@ function updateSurahList() {
                        class="ayah-input" 
                        placeholder="e.g., 1-10, 1,3,5"
                        value="${ayahString && ayahString !== 'F' && ayahString !== 'f' ? ayahString : ''}"
+                       ${isFullyMemorized ? 'disabled' : ''}
                        data-surah-id="${surahId}"
                        aria-label="Ayah range for ${surah.transliteration}">
             </div>
@@ -275,10 +280,20 @@ function updateSurahList() {
         
         // Attach event listeners
         const checkbox = surahItem.querySelector('.surah-checkbox');
+        const checkboxLabel = surahItem.querySelector('.checkbox-label');
         const input = surahItem.querySelector('.ayah-input');
         
         checkbox.addEventListener('change', (e) => {
             handleCheckboxChange(surahId, e.target.checked, input);
+        });
+        
+        // Keyboard support for checkbox label
+        checkboxLabel.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                checkbox.checked = !checkbox.checked;
+                checkbox.dispatchEvent(new Event('change'));
+            }
         });
         
         input.addEventListener('blur', (e) => {
@@ -297,15 +312,19 @@ function updateSurahList() {
 
 // Handle checkbox change
 function handleCheckboxChange(surahId, isChecked, inputElement) {
+    const checkboxLabel = document.querySelector(`label[for="checkbox-${surahId}"]`);
+    
     if (isChecked) {
         // Mark as fully memorized
         progressData[currentMode][surahId] = 'F';
         inputElement.value = '';
         inputElement.disabled = true;
+        if (checkboxLabel) checkboxLabel.setAttribute('aria-checked', 'true');
     } else {
         // Uncheck - clear progress
         delete progressData[currentMode][surahId];
         inputElement.disabled = false;
+        if (checkboxLabel) checkboxLabel.setAttribute('aria-checked', 'false');
     }
     saveProgressToStorage();
     updateUI();
