@@ -17,7 +17,6 @@ async function init() {
     }
     loadProgressFromStorage();
     setupEventListeners();
-    populateSurahSelect();
     updateUI();
 }
 
@@ -55,11 +54,6 @@ function setupEventListeners() {
         });
     });
 
-    // Add Surah button
-    document.getElementById('addSurahBtn').addEventListener('click', () => {
-        openModal();
-    });
-
     // Clear All button
     document.getElementById('clearAllBtn').addEventListener('click', () => {
         if (confirm(`Are you sure you want to clear all ${currentMode} progress?`)) {
@@ -78,52 +72,6 @@ function setupEventListeners() {
     });
 
     document.getElementById('importFile').addEventListener('change', importData);
-
-    // Modal controls
-    document.getElementById('closeModal').addEventListener('click', closeModal);
-    document.getElementById('cancelBtn').addEventListener('click', closeModal);
-    document.getElementById('saveBtn').addEventListener('click', saveSurahProgress);
-
-    // Surah select change
-    document.getElementById('surahSelect').addEventListener('change', (e) => {
-        const surahId = parseInt(e.target.value);
-        if (surahId) {
-            updateSurahInfo(surahId);
-        }
-    });
-
-    // Close modal on backdrop click
-    document.getElementById('surahModal').addEventListener('click', (e) => {
-        if (e.target.id === 'surahModal') {
-            closeModal();
-        }
-    });
-
-    // Close modal on Escape key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && document.getElementById('surahModal').classList.contains('show')) {
-            closeModal();
-        }
-    });
-}
-
-// Populate surah select dropdown
-function populateSurahSelect() {
-    const select = document.getElementById('surahSelect');
-    quranData.forEach((surah, index) => {
-        const option = document.createElement('option');
-        option.value = surah.id;
-        option.textContent = `${surah.id}. ${surah.transliteration} (${surah.name})`;
-        select.appendChild(option);
-    });
-}
-
-// Update surah info in modal
-function updateSurahInfo(surahId) {
-    const surah = quranData[surahId - 1];
-    document.getElementById('totalVerses').textContent = surah.total_verses;
-    document.getElementById('surahType').textContent = surah.type.charAt(0).toUpperCase() + surah.type.slice(1);
-    document.getElementById('surahInfo').classList.remove('hidden');
 }
 
 // Parse ayah range string
@@ -309,133 +257,150 @@ function updateUI() {
     updateSurahList();
 }
 
-// Update surah list
+// Update surah list - Display all 114 surahs inline
 function updateSurahList() {
     const surahList = document.getElementById('surahList');
     surahList.innerHTML = '';
     
     const currentData = progressData[currentMode];
-    const entries = Object.entries(currentData).filter(([_, value]) => value !== '0');
     
-    if (entries.length === 0) {
-        surahList.innerHTML = '<div class="empty-state">No progress added yet. Click "Add Surah" to get started!</div>';
-        return;
-    }
-    
-    entries.sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
-    
-    for (const [surahId, ayahString] of entries) {
-        const surah = quranData[parseInt(surahId) - 1];
-        const ayahList = getAyahList(parseInt(surahId), ayahString);
-        const percent = getSurahPercent(parseInt(surahId), ayahList);
-        const segments = getAyahSegments(parseInt(surahId), ayahList);
+    // Display all surahs
+    quranData.forEach((surah) => {
+        const surahId = surah.id;
+        const ayahString = currentData[surahId] || '';
+        const ayahList = getAyahList(surahId, ayahString);
+        const isFullyMemorized = ayahList.length === surah.total_verses;
+        const percent = ayahList.length > 0 ? getSurahPercent(surahId, ayahList) : { avg: 0 };
+        const segments = ayahList.length > 0 ? getAyahSegments(surahId, ayahList) : [];
         
         const surahItem = document.createElement('div');
         surahItem.className = 'surah-item';
         
-        let ayahDisplay = ayahString;
-        if (ayahString === 'F' || ayahString === 'f') {
-            ayahDisplay = 'Full Surah';
-        } else if (ayahList.length > 0) {
-            ayahDisplay = `Ayahs: ${ayahString}`;
-        }
-        
         // Build progress bar segments
         const totalAyahs = surah.total_verses;
         let segmentMarkup = '';
-        for (const segment of segments) {
-            const segmentWidth = ((segment.end - segment.start + 1) / totalAyahs) * 100;
-            const segmentClass = segment.memorized ? 'segment-memorized' : 'segment-not-memorized';
-            const status = segment.memorized ? 'Memorized' : 'Not Memorized';
-            const ariaLabel = `Verses ${segment.start} to ${segment.end}: ${status}`;
-            const title = `Verses ${segment.start}-${segment.end} (${status})`;
-            segmentMarkup += `<div class="progress-segment ${segmentClass}" style="width: ${segmentWidth}%;" title="${title}" aria-label="${ariaLabel}" role="img"></div>`;
+        if (segments.length > 0) {
+            for (const segment of segments) {
+                const segmentWidth = ((segment.end - segment.start + 1) / totalAyahs) * 100;
+                const segmentClass = segment.memorized ? 'segment-memorized' : 'segment-not-memorized';
+                const status = segment.memorized ? 'Memorized' : 'Not Memorized';
+                const ariaLabel = `Verses ${segment.start} to ${segment.end}: ${status}`;
+                const title = `Verses ${segment.start}-${segment.end} (${status})`;
+                segmentMarkup += `<div class="progress-segment ${segmentClass}" style="width: ${segmentWidth}%;" title="${title}" aria-label="${ariaLabel}" role="img"></div>`;
+            }
         }
         
         surahItem.innerHTML = `
-            <div class="surah-info-left">
-                <span class="surah-number">${surah.id}</span>
-                <span class="surah-name">${surah.transliteration} (${surah.name})</span>
-                <div class="surah-details">${ayahDisplay} • ${ayahList.length}/${surah.total_verses} verses</div>
-                <div class="surah-progress-bar" role="progressbar" aria-valuenow="${percent.avg.toFixed(1)}" aria-valuemin="0" aria-valuemax="100" aria-label="Memorization progress: ${percent.avg.toFixed(1)}%">
-                    ${segmentMarkup}
+            <div class="surah-checkbox-container">
+                <input type="checkbox" 
+                       id="checkbox-${surahId}" 
+                       class="surah-checkbox" 
+                       ${isFullyMemorized ? 'checked' : ''}
+                       data-surah-id="${surahId}"
+                       aria-label="Mark ${surah.transliteration} as fully memorized">
+                <label for="checkbox-${surahId}" class="checkbox-label">✓</label>
+            </div>
+            <div class="surah-info-container">
+                <div class="surah-header">
+                    <span class="surah-number">${surah.id}</span>
+                    <span class="surah-name">${surah.transliteration}</span>
+                    <span class="surah-name-arabic">${surah.name}</span>
                 </div>
+                <div class="surah-meta">
+                    <span class="surah-type">${surah.type.charAt(0).toUpperCase() + surah.type.slice(1)}</span>
+                    <span class="surah-verses">${surah.total_verses} verses</span>
+                    ${ayahList.length > 0 ? `<span class="surah-progress-text">${ayahList.length}/${surah.total_verses} memorized</span>` : ''}
+                </div>
+                ${segmentMarkup ? `<div class="surah-progress-bar" role="progressbar" aria-valuenow="${percent.avg.toFixed(1)}" aria-valuemin="0" aria-valuemax="100" aria-label="Memorization progress: ${percent.avg.toFixed(1)}%">
+                    ${segmentMarkup}
+                </div>` : ''}
             </div>
-            <div class="surah-progress">
-                <div class="surah-percent">${percent.avg.toFixed(1)}%</div>
+            <div class="surah-input-container">
+                <input type="text" 
+                       class="ayah-input" 
+                       placeholder="e.g., 1-10, 1,3,5"
+                       value="${ayahString && ayahString !== 'F' && ayahString !== 'f' ? ayahString : ''}"
+                       data-surah-id="${surahId}"
+                       ${isFullyMemorized ? 'disabled' : ''}
+                       aria-label="Ayah range for ${surah.transliteration}">
             </div>
-            <button class="delete-btn" aria-label="Delete surah ${surah.transliteration}" data-surah-id="${surah.id}">🗑️</button>
+            <div class="surah-percent-container">
+                <span class="surah-percent">${percent.avg.toFixed(1)}%</span>
+            </div>
         `;
         
-        // Attach delete event listener
-        const deleteBtn = surahItem.querySelector('.delete-btn');
-        deleteBtn.addEventListener('click', (e) => {
-            const surahId = parseInt(e.currentTarget.getAttribute('data-surah-id'));
-            deleteSurah(surahId);
+        // Attach event listeners
+        const checkbox = surahItem.querySelector('.surah-checkbox');
+        const input = surahItem.querySelector('.ayah-input');
+        
+        checkbox.addEventListener('change', (e) => {
+            handleCheckboxChange(surahId, e.target.checked, input);
+        });
+        
+        input.addEventListener('blur', (e) => {
+            handleAyahInputChange(surahId, e.target.value, checkbox);
+        });
+        
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.target.blur();
+            }
         });
         
         surahList.appendChild(surahItem);
-    }
+    });
 }
 
-// Open modal
-function openModal() {
-    document.getElementById('surahModal').classList.add('show');
-    document.getElementById('surahSelect').value = '';
-    document.getElementById('ayahRange').value = '';
-    document.getElementById('surahInfo').classList.add('hidden');
-    
-    // Set focus to surah select for accessibility
-    setTimeout(() => {
-        document.getElementById('surahSelect').focus();
-    }, 100);
-}
-
-// Close modal
-function closeModal() {
-    document.getElementById('surahModal').classList.remove('show');
-}
-
-// Save surah progress
-function saveSurahProgress() {
-    const surahId = parseInt(document.getElementById('surahSelect').value);
-    const ayahRange = document.getElementById('ayahRange').value.trim();
-    
-    if (!surahId) {
-        alert('Please select a Surah');
-        return;
+// Handle checkbox change
+function handleCheckboxChange(surahId, isChecked, inputElement) {
+    if (isChecked) {
+        // Mark as fully memorized
+        progressData[currentMode][surahId] = 'F';
+        inputElement.value = '';
+        inputElement.disabled = true;
+    } else {
+        // Uncheck - clear progress
+        delete progressData[currentMode][surahId];
+        inputElement.disabled = false;
     }
-    
-    if (!ayahRange) {
-        alert('Please enter an ayah range');
-        return;
-    }
-    
-    // Validate ayah range
-    try {
-        const ayahList = getAyahList(surahId, ayahRange);
-        if (ayahRange !== 'F' && ayahRange !== 'f' && ayahRange !== '0' && ayahList.length === 0) {
-            alert('Invalid ayah range. Please check your input.');
-            return;
-        }
-    } catch (error) {
-        alert('Invalid ayah range format.');
-        return;
-    }
-    
-    progressData[currentMode][surahId] = ayahRange;
     saveProgressToStorage();
     updateUI();
-    closeModal();
 }
 
-// Delete surah
-function deleteSurah(surahId) {
-    if (confirm('Are you sure you want to remove this Surah?')) {
+// Handle ayah input change
+function handleAyahInputChange(surahId, value, checkboxElement) {
+    const trimmedValue = value.trim();
+    
+    if (!trimmedValue || trimmedValue === '0') {
+        // Clear progress
         delete progressData[currentMode][surahId];
-        saveProgressToStorage();
-        updateUI();
+        checkboxElement.checked = false;
+    } else {
+        // Validate and save
+        try {
+            const ayahList = getAyahList(surahId, trimmedValue);
+            if (ayahList.length === 0 && trimmedValue !== 'F' && trimmedValue !== 'f') {
+                alert('Invalid ayah range. Please check your input.');
+                return;
+            }
+            
+            // Check if it's full surah
+            const surah = quranData[surahId - 1];
+            if (ayahList.length === surah.total_verses || trimmedValue === 'F' || trimmedValue === 'f') {
+                progressData[currentMode][surahId] = 'F';
+                checkboxElement.checked = true;
+            } else {
+                progressData[currentMode][surahId] = trimmedValue;
+                checkboxElement.checked = false;
+            }
+        } catch (error) {
+            alert('Invalid ayah range format.');
+            return;
+        }
     }
+    
+    saveProgressToStorage();
+    updateUI();
 }
 
 // Local storage functions

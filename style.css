@@ -215,12 +215,35 @@ header h1 {
     animation: fadeIn 1.8s ease;
 }
 
+.surah-list-header {
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    border: 2px solid var(--border-color);
+    box-shadow: var(--shadow);
+}
+
+.surah-list-header h2 {
+    color: var(--primary-color);
+    margin-bottom: 10px;
+}
+
+.surah-list-header .help-text {
+    color: var(--text-muted);
+    font-size: 0.95em;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
 .surah-item {
     background: white;
     border-radius: 12px;
-    padding: 20px;
-    display: flex;
-    justify-content: space-between;
+    padding: 15px 20px;
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    gap: 15px;
     align-items: center;
     transition: all 0.3s ease;
     border: 2px solid var(--border-color);
@@ -230,8 +253,67 @@ header h1 {
 
 .surah-item:hover {
     background: var(--bg-lighter);
-    transform: translateX(5px);
     box-shadow: 0 6px 12px rgba(13, 122, 95, 0.15);
+}
+
+.surah-checkbox-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.surah-checkbox {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 2px solid var(--primary-color);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: white;
+    color: transparent;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.surah-checkbox:checked + .checkbox-label {
+    background: var(--gradient-1);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.checkbox-label:hover {
+    background: var(--bg-light);
+    transform: scale(1.05);
+}
+
+.checkbox-label:focus,
+.surah-checkbox:focus + .checkbox-label {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px rgba(13, 122, 95, 0.2);
+}
+
+.surah-info-container {
+    flex: 1;
+    min-width: 0;
+}
+
+.surah-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
+    flex-wrap: wrap;
 }
 
 .surah-info-left {
@@ -239,23 +321,45 @@ header h1 {
 }
 
 .surah-number {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     background: var(--gradient-1);
     color: white;
-    width: 40px;
-    height: 40px;
+    min-width: 35px;
+    height: 35px;
     border-radius: 50%;
     text-align: center;
-    line-height: 40px;
     font-weight: bold;
-    margin-right: 15px;
+    font-size: 0.9em;
+    padding: 0 5px;
 }
 
 .surah-name {
-    font-size: 1.3em;
+    font-size: 1.1em;
     font-weight: 600;
-    margin-bottom: 5px;
     color: var(--primary-color);
+}
+
+.surah-name-arabic {
+    font-size: 1em;
+    color: var(--text-muted);
+    font-weight: normal;
+}
+
+.surah-meta {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    font-size: 0.85em;
+    color: var(--text-muted);
+}
+
+.surah-type, .surah-verses, .surah-progress-text {
+    padding: 2px 8px;
+    background: var(--bg-light);
+    border-radius: 4px;
 }
 
 .surah-details {
@@ -304,6 +408,46 @@ header h1 {
     transform: scaleY(1.1);
 }
 
+.surah-input-container {
+    display: flex;
+    align-items: center;
+}
+
+.ayah-input {
+    width: 150px;
+    padding: 8px 12px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    background: white;
+    color: var(--text-dark);
+    font-size: 0.9em;
+    transition: all 0.3s ease;
+}
+
+.ayah-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background: var(--bg-lighter);
+    box-shadow: 0 0 0 3px rgba(13, 122, 95, 0.1);
+}
+
+.ayah-input:disabled {
+    background: var(--bg-light);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.surah-percent-container {
+    text-align: right;
+    min-width: 60px;
+}
+
+.surah-percent {
+    font-size: 1.3em;
+    font-weight: bold;
+    color: var(--secondary-color);
+}
+
 .surah-progress {
     text-align: right;
     margin-right: 15px;
@@ -315,146 +459,6 @@ header h1 {
     color: var(--secondary-color);
 }
 
-.delete-btn {
-    background: var(--danger);
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 1.2em;
-    transition: all 0.3s ease;
-    width: 40px;
-    height: 40px;
-}
-
-.delete-btn:hover {
-    background: #c0392b;
-    transform: rotate(90deg);
-}
-
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(10, 61, 47, 0.85);
-    z-index: 1000;
-    animation: fadeIn 0.3s ease;
-}
-
-.modal.show {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.modal-content {
-    background: white;
-    border-radius: 15px;
-    width: 90%;
-    max-width: 500px;
-    max-height: 90vh;
-    overflow: auto;
-    animation: slideUp 0.3s ease;
-    border: 2px solid var(--border-color);
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px;
-    border-bottom: 2px solid #e8f5f1;
-}
-
-.modal-header h2 {
-    margin: 0;
-    color: var(--primary-color);
-}
-
-.close-btn {
-    background: none;
-    border: none;
-    font-size: 2em;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.close-btn:hover {
-    color: var(--danger);
-    transform: rotate(90deg);
-}
-
-.modal-body {
-    padding: 20px;
-}
-
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 600;
-    color: var(--primary-color);
-}
-
-.form-control {
-    width: 100%;
-    padding: 12px;
-    border: 2px solid var(--border-color);
-    border-radius: 8px;
-    background: white;
-    color: var(--text-dark);
-    font-size: 1em;
-    transition: all 0.3s ease;
-}
-
-.form-control:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    background: var(--bg-lighter);
-    box-shadow: 0 0 0 3px rgba(13, 122, 95, 0.1);
-}
-
-.form-control option {
-    background: white;
-    color: var(--text-dark);
-}
-
-.help-text {
-    display: block;
-    margin-top: 5px;
-    color: var(--text-muted);
-    font-size: 0.85em;
-}
-
-.surah-info {
-    background: var(--bg-light);
-    padding: 15px;
-    border-radius: 8px;
-    margin-top: 15px;
-    border: 1px solid var(--border-color);
-}
-
-.surah-info p {
-    margin: 5px 0;
-    color: var(--text-dark);
-}
-
-.modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    padding: 20px;
-    border-top: 2px solid #e8f5f1;
-}
-
 footer {
     text-align: center;
     margin-top: 50px;
@@ -464,12 +468,6 @@ footer {
 
 .hidden {
     display: none;
-}
-
-.empty-state {
-    text-align: center;
-    padding: 40px;
-    color: var(--text-muted);
 }
 
 @keyframes fadeIn {
@@ -545,17 +543,29 @@ footer {
     }
 
     .surah-item {
-        flex-direction: column;
-        text-align: center;
-        gap: 15px;
+        grid-template-columns: auto 1fr;
+        grid-template-rows: auto auto;
+        gap: 10px;
     }
 
-    .surah-info-left {
+    .surah-checkbox-container {
+        grid-row: 1 / 3;
+    }
+
+    .surah-info-container {
+        grid-column: 2;
+    }
+
+    .surah-input-container {
+        grid-column: 1 / 3;
+    }
+
+    .surah-percent-container {
+        grid-column: 1 / 3;
+        text-align: center;
+    }
+
+    .ayah-input {
         width: 100%;
-    }
-
-    .surah-progress {
-        text-align: center;
-        margin-right: 0;
     }
 }
