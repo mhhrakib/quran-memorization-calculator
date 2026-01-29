@@ -339,6 +339,12 @@ function handleAyahInputChange(surahId, value, checkboxElement) {
         delete progressData[currentMode][surahId];
         checkboxElement.checked = false;
     } else {
+        // Validate input format (only allow numbers, commas, hyphens, F, and spaces)
+        if (!/^[0-9,\-\sFf]+$/.test(trimmedValue) && trimmedValue !== 'F' && trimmedValue !== 'f') {
+            alert('Invalid ayah range format. Only numbers, commas, and hyphens are allowed.');
+            return;
+        }
+        
         // Validate and save
         try {
             const ayahList = getAyahList(surahId, trimmedValue);
@@ -408,12 +414,38 @@ function importData(event) {
     reader.onload = (e) => {
         try {
             const imported = JSON.parse(e.target.result);
+            
+            // Validate structure
+            if (!imported || typeof imported !== 'object') {
+                alert('Invalid data format.');
+                return;
+            }
+            
             if (imported.memorization || imported.reading) {
+                // Validate and sanitize imported data
+                const sanitized = {
+                    memorization: {},
+                    reading: {}
+                };
+                
+                ['memorization', 'reading'].forEach(mode => {
+                    if (imported[mode] && typeof imported[mode] === 'object') {
+                        Object.keys(imported[mode]).forEach(surahId => {
+                            const id = parseInt(surahId);
+                            // Validate surah ID is in valid range
+                            if (id >= 1 && id <= 114) {
+                                const value = imported[mode][surahId];
+                                // Only allow string values with valid characters
+                                if (typeof value === 'string' && /^[0-9,\-\sFf]+$/.test(value)) {
+                                    sanitized[mode][id] = value;
+                                }
+                            }
+                        });
+                    }
+                });
+                
                 if (confirm('This will replace your current progress. Continue?')) {
-                    progressData = imported;
-                    // Ensure both modes exist
-                    if (!progressData.memorization) progressData.memorization = {};
-                    if (!progressData.reading) progressData.reading = {};
+                    progressData = sanitized;
                     saveProgressToStorage();
                     updateUI();
                     alert('Data imported successfully!');
