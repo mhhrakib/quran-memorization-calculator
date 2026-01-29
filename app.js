@@ -219,7 +219,12 @@ function getSurahPercent(surahId, ayahList) {
     };
 }
 
-// Get segments from ayah list for progress bar visualization
+/**
+ * Get segments from ayah list for progress bar visualization
+ * @param {number} surahId - The ID of the surah (1-114)
+ * @param {Array<number>} ayahList - Sorted array of memorized ayah numbers
+ * @returns {Array<{start: number, end: number, memorized: boolean}>} Array of segments
+ */
 function getAyahSegments(surahId, ayahList) {
     const surah = quranData[surahId - 1];
     const totalAyahs = surah.total_verses;
@@ -232,37 +237,21 @@ function getAyahSegments(surahId, ayahList) {
         return [{ start: 1, end: totalAyahs, memorized: true }];
     }
     
-    // Sort ayah list
-    const sortedAyahs = [...ayahList].sort((a, b) => a - b);
+    // Create a Set for O(1) lookup
+    const memorizedSet = new Set(ayahList);
     const segments = [];
     
-    let currentPos = 1;
-    let i = 0;
-    
-    while (currentPos <= totalAyahs) {
-        if (i < sortedAyahs.length && sortedAyahs[i] === currentPos) {
-            // Start of a memorized segment
-            const start = currentPos;
-            while (i < sortedAyahs.length && sortedAyahs[i] === currentPos) {
-                currentPos++;
-                i++;
-            }
-            segments.push({ start, end: currentPos - 1, memorized: true });
-        } else {
-            // Start of a non-memorized segment
-            const start = currentPos;
-            while (i < sortedAyahs.length && sortedAyahs[i] > currentPos) {
-                currentPos++;
-            }
-            if (i >= sortedAyahs.length) {
-                // No more memorized ayahs, fill to the end
-                segments.push({ start, end: totalAyahs, memorized: false });
-                break;
-            } else {
-                segments.push({ start, end: sortedAyahs[i] - 1, memorized: false });
-                currentPos = sortedAyahs[i];
-            }
+    let i = 1;
+    while (i <= totalAyahs) {
+        const isMemorized = memorizedSet.has(i);
+        const start = i;
+        
+        // Continue while ayahs have the same memorization status
+        while (i <= totalAyahs && memorizedSet.has(i) === isMemorized) {
+            i++;
         }
+        
+        segments.push({ start, end: i - 1, memorized: isMemorized });
     }
     
     return segments;
@@ -353,11 +342,14 @@ function updateSurahList() {
         
         // Build progress bar segments
         const totalAyahs = surah.total_verses;
-        let segmentsHtml = '';
+        let segmentMarkup = '';
         for (const segment of segments) {
             const segmentWidth = ((segment.end - segment.start + 1) / totalAyahs) * 100;
             const segmentClass = segment.memorized ? 'segment-memorized' : 'segment-not-memorized';
-            segmentsHtml += `<div class="progress-segment ${segmentClass}" style="width: ${segmentWidth}%;" title="${segment.start}-${segment.end}"></div>`;
+            const status = segment.memorized ? 'Memorized' : 'Not Memorized';
+            const ariaLabel = `Verses ${segment.start} to ${segment.end}: ${status}`;
+            const title = `Verses ${segment.start}-${segment.end} (${status})`;
+            segmentMarkup += `<div class="progress-segment ${segmentClass}" style="width: ${segmentWidth}%;" title="${title}" aria-label="${ariaLabel}" role="img"></div>`;
         }
         
         surahItem.innerHTML = `
@@ -365,8 +357,8 @@ function updateSurahList() {
                 <span class="surah-number">${surah.id}</span>
                 <span class="surah-name">${surah.transliteration} (${surah.name})</span>
                 <div class="surah-details">${ayahDisplay} • ${ayahList.length}/${surah.total_verses} verses</div>
-                <div class="surah-progress-bar">
-                    ${segmentsHtml}
+                <div class="surah-progress-bar" role="progressbar" aria-valuenow="${percent.avg.toFixed(1)}" aria-valuemin="0" aria-valuemax="100" aria-label="Memorization progress: ${percent.avg.toFixed(1)}%">
+                    ${segmentMarkup}
                 </div>
             </div>
             <div class="surah-progress">

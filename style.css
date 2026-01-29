@@ -278,20 +278,30 @@ header h1 {
 .progress-segment {
     height: 100%;
     transition: all 0.3s ease;
+    position: relative;
+}
+
+.progress-segment:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: rgba(255, 255, 255, 0.3);
 }
 
 .segment-memorized {
     background: var(--gradient-1);
-    border-right: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .segment-not-memorized {
     background: var(--bg-light);
-    border-right: 1px solid var(--border-color);
 }
 
 .progress-segment:hover {
-    opacity: 0.8;
+    filter: brightness(0.95);
+    transform: scaleY(1.1);
 }
 
 .surah-progress {
