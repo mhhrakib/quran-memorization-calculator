@@ -219,6 +219,55 @@ function getSurahPercent(surahId, ayahList) {
     };
 }
 
+// Get segments from ayah list for progress bar visualization
+function getAyahSegments(surahId, ayahList) {
+    const surah = quranData[surahId - 1];
+    const totalAyahs = surah.total_verses;
+    
+    if (ayahList.length === 0) {
+        return [{ start: 1, end: totalAyahs, memorized: false }];
+    }
+    
+    if (ayahList.length === totalAyahs) {
+        return [{ start: 1, end: totalAyahs, memorized: true }];
+    }
+    
+    // Sort ayah list
+    const sortedAyahs = [...ayahList].sort((a, b) => a - b);
+    const segments = [];
+    
+    let currentPos = 1;
+    let i = 0;
+    
+    while (currentPos <= totalAyahs) {
+        if (i < sortedAyahs.length && sortedAyahs[i] === currentPos) {
+            // Start of a memorized segment
+            const start = currentPos;
+            while (i < sortedAyahs.length && sortedAyahs[i] === currentPos) {
+                currentPos++;
+                i++;
+            }
+            segments.push({ start, end: currentPos - 1, memorized: true });
+        } else {
+            // Start of a non-memorized segment
+            const start = currentPos;
+            while (i < sortedAyahs.length && sortedAyahs[i] > currentPos) {
+                currentPos++;
+            }
+            if (i >= sortedAyahs.length) {
+                // No more memorized ayahs, fill to the end
+                segments.push({ start, end: totalAyahs, memorized: false });
+                break;
+            } else {
+                segments.push({ start, end: sortedAyahs[i] - 1, memorized: false });
+                currentPos = sortedAyahs[i];
+            }
+        }
+    }
+    
+    return segments;
+}
+
 // Calculate overall stats
 function getFullStats() {
     let totalWords = 0;
@@ -290,6 +339,7 @@ function updateSurahList() {
         const surah = quranData[parseInt(surahId) - 1];
         const ayahList = getAyahList(parseInt(surahId), ayahString);
         const percent = getSurahPercent(parseInt(surahId), ayahList);
+        const segments = getAyahSegments(parseInt(surahId), ayahList);
         
         const surahItem = document.createElement('div');
         surahItem.className = 'surah-item';
@@ -301,11 +351,23 @@ function updateSurahList() {
             ayahDisplay = `Ayahs: ${ayahString}`;
         }
         
+        // Build progress bar segments
+        const totalAyahs = surah.total_verses;
+        let segmentsHtml = '';
+        for (const segment of segments) {
+            const segmentWidth = ((segment.end - segment.start + 1) / totalAyahs) * 100;
+            const segmentClass = segment.memorized ? 'segment-memorized' : 'segment-not-memorized';
+            segmentsHtml += `<div class="progress-segment ${segmentClass}" style="width: ${segmentWidth}%;" title="${segment.start}-${segment.end}"></div>`;
+        }
+        
         surahItem.innerHTML = `
             <div class="surah-info-left">
                 <span class="surah-number">${surah.id}</span>
                 <span class="surah-name">${surah.transliteration} (${surah.name})</span>
                 <div class="surah-details">${ayahDisplay} • ${ayahList.length}/${surah.total_verses} verses</div>
+                <div class="surah-progress-bar">
+                    ${segmentsHtml}
+                </div>
             </div>
             <div class="surah-progress">
                 <div class="surah-percent">${percent.avg.toFixed(1)}%</div>
