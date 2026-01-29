@@ -262,13 +262,13 @@ The parser validates inputs against the actual number of verses in each Surah.
 - **LocalStorage**: Automatic saving on every change
 - **JSON Export**: Backup progress to file
 - **JSON Import**: Restore from backup
-- **Data Structure**:
+- **Data Structure Example**:
   ```json
   {
     "memorization": {
-      "1": "F",           // Full Surah Al-Fatihah
-      "2": "1-100",       // First 100 verses of Al-Baqarah
-      "112": "1,2,3,4"    // Specific verses of Al-Ikhlas
+      "1": "F",
+      "2": "1-100",
+      "112": "1,2,3,4"
     },
     "reading": {
       "1": "F",
@@ -276,6 +276,10 @@ The parser validates inputs against the actual number of verses in each Surah.
     }
   }
   ```
+  Note: The keys are Surah IDs (1-114). Values can be:
+  - `"F"` for full Surah
+  - `"1-100"` for verse ranges
+  - `"1,2,3,4"` for specific verses
 
 ### Browser Compatibility
 
@@ -340,16 +344,16 @@ The parser validates inputs against the actual number of verses in each Surah.
 
 #### CSS (`style.css`)
 Key sections:
-- **CSS Variables** (lines 7-24): Color scheme and theming
-- **Base Styles** (lines 26-50): Body, container, header
-- **Mode Selector** (lines 52-80): Toggle between modes
-- **Statistics Cards** (lines 82-120): Progress overview display
-- **Progress Bar** (lines 122-160): Animated completion bar
-- **Surah List** (lines 162-350): Grid layout for all Surahs
-- **Surah Items** (lines 352-450): Individual Surah cards
-- **Progress Segments** (lines 452-480): Visualization within each Surah
-- **Animations** (lines 482-520): Fade-in and slide-up effects
-- **Responsive Design** (lines 522-600): Mobile breakpoints
+- **CSS Variables**: Color scheme and theming (`:root` selector)
+- **Base Styles**: Body, container, header
+- **Mode Selector**: Toggle between memorization and reading modes
+- **Statistics Cards**: Progress overview display
+- **Progress Bar**: Animated completion bar
+- **Surah List**: Grid layout for all 114 Surahs
+- **Surah Items**: Individual Surah cards with checkbox and input
+- **Progress Segments**: Segmented visualization within each Surah
+- **Animations**: Fade-in and slide-up effects
+- **Responsive Design**: Mobile breakpoints and media queries
 
 #### JavaScript (`app.js`)
 Key functions and their purposes:
