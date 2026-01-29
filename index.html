@@ -41,46 +41,18 @@
         </div>
 
         <div class="actions">
-            <button class="btn btn-primary" id="addSurahBtn">➕ Add Surah</button>
             <button class="btn btn-secondary" id="clearAllBtn">🗑️ Clear All</button>
             <button class="btn btn-secondary" id="exportBtn">💾 Export</button>
             <button class="btn btn-secondary" id="importBtn">📂 Import</button>
         </div>
 
-        <div class="surah-list" id="surahList">
-            <!-- Surah items will be added dynamically -->
+        <div class="surah-list-header">
+            <h2>All Surahs</h2>
+            <p class="help-text">Check the box to mark a surah as fully memorized, or enter specific ayah ranges (e.g., "1-10", "1,3,5-7")</p>
         </div>
 
-        <div class="modal" id="surahModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 id="modalTitle">Add Surah Progress</h2>
-                    <button class="close-btn" id="closeModal" aria-label="Close modal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="surahSelect">Select Surah:</label>
-                        <select id="surahSelect" class="form-control">
-                            <option value="">-- Select Surah --</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="ayahRange">Ayah Range:</label>
-                        <input type="text" id="ayahRange" class="form-control" placeholder='e.g., "F" (full), "1-10", "1,3,5", "1-5,10-15"'>
-                        <small class="help-text">
-                            Enter "F" for full Surah, "0" for none, or specify ranges like "1-10" or "1,3,5,7-10"
-                        </small>
-                    </div>
-                    <div class="surah-info hidden" id="surahInfo">
-                        <p><strong>Total Verses:</strong> <span id="totalVerses">0</span></p>
-                        <p><strong>Surah Type:</strong> <span id="surahType">-</span></p>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" id="cancelBtn">Cancel</button>
-                    <button class="btn btn-primary" id="saveBtn">Save</button>
-                </div>
-            </div>
+        <div class="surah-list" id="surahList">
+            <!-- Surah items will be added dynamically -->
         </div>
 
         <input type="file" id="importFile" accept=".json" class="hidden" aria-label="Import progress data">
