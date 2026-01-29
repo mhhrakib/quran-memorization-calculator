@@ -35,6 +35,8 @@ async function loadQuranData() {
     } catch (error) {
         console.error('Error loading Quran data:', error);
         alert('Failed to load Quran data. Please refresh the page.');
+        // Prevent further operations
+        document.getElementById('addSurahBtn').disabled = true;
         return false;
     }
     return true;
@@ -45,12 +47,8 @@ function setupEventListeners() {
     // Mode selector
     document.querySelectorAll('.mode-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            document.querySelectorAll('.mode-btn').forEach(b => {
-                b.classList.remove('active');
-                b.setAttribute('aria-pressed', 'false');
-            });
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            btn.setAttribute('aria-pressed', 'true');
             currentMode = btn.dataset.mode;
             updateUI();
         });
@@ -76,7 +74,7 @@ function setupEventListeners() {
     document.getElementById('importFile').addEventListener('change', importData);
 }
 
-// Local storage functions
+// Parse ayah range string
 function getAyahList(surahId, ayahString) {
     if (!surahId || surahId < 1 || surahId > 114) {
         console.error('Invalid surah ID:', surahId);
@@ -169,6 +167,44 @@ function getSurahPercent(surahId, ayahList) {
     };
 }
 
+/**
+ * Get segments from ayah list for progress bar visualization
+ * @param {number} surahId - The ID of the surah (1-114)
+ * @param {Array<number>} ayahList - Sorted array of memorized ayah numbers
+ * @returns {Array<{start: number, end: number, memorized: boolean}>} Array of segments
+ */
+function getAyahSegments(surahId, ayahList) {
+    const surah = quranData[surahId - 1];
+    const totalAyahs = surah.total_verses;
+    
+    if (ayahList.length === 0) {
+        return [{ start: 1, end: totalAyahs, memorized: false }];
+    }
+    
+    if (ayahList.length === totalAyahs) {
+        return [{ start: 1, end: totalAyahs, memorized: true }];
+    }
+    
+    // Create a Set for O(1) lookup
+    const memorizedSet = new Set(ayahList);
+    const segments = [];
+    
+    let i = 1;
+    while (i <= totalAyahs) {
+        const isMemorized = memorizedSet.has(i);
+        const start = i;
+        
+        // Continue while ayahs have the same memorization status
+        while (i <= totalAyahs && memorizedSet.has(i) === isMemorized) {
+            i++;
+        }
+        
+        segments.push({ start, end: i - 1, memorized: isMemorized });
+    }
+    
+    return segments;
+}
+
 // Calculate overall stats
 function getFullStats() {
     let totalWords = 0;
@@ -214,16 +250,14 @@ function updateUI() {
     document.getElementById('charsPercent').textContent = stats.chars.toFixed(2) + '%';
     
     // Update progress bar
-    const progressBar = document.getElementById('progressBar');
     document.getElementById('progressFill').style.width = stats.avg + '%';
-    progressBar.setAttribute('aria-valuenow', Math.round(stats.avg));
     document.getElementById('progressText').textContent = `${stats.completedSurahs} of 114 Surahs`;
     
     // Update surah list
     updateSurahList();
 }
 
-// Update surah list - Display all 114 surahs
+// Update surah list - Display all 114 surahs inline
 function updateSurahList() {
     const surahList = document.getElementById('surahList');
     surahList.innerHTML = '';
@@ -236,11 +270,25 @@ function updateSurahList() {
         const ayahString = currentData[surahId] || '';
         const ayahList = getAyahList(surahId, ayahString);
         const isFullyMemorized = ayahList.length === surah.total_verses;
+        const percent = ayahList.length > 0 ? getSurahPercent(surahId, ayahList) : { avg: 0 };
+        const segments = ayahList.length > 0 ? getAyahSegments(surahId, ayahList) : [];
         
         const surahItem = document.createElement('div');
         surahItem.className = 'surah-item';
         
-        const percent = ayahList.length > 0 ? getSurahPercent(surahId, ayahList) : { avg: 0 };
+        // Build progress bar segments
+        const totalAyahs = surah.total_verses;
+        let segmentMarkup = '';
+        if (segments.length > 0) {
+            for (const segment of segments) {
+                const segmentWidth = ((segment.end - segment.start + 1) / totalAyahs) * 100;
+                const segmentClass = segment.memorized ? 'segment-memorized' : 'segment-not-memorized';
+                const status = segment.memorized ? 'Memorized' : 'Not Memorized';
+                const ariaLabel = `Verses ${segment.start} to ${segment.end}: ${status}`;
+                const title = `Verses ${segment.start}-${segment.end} (${status})`;
+                segmentMarkup += `<div class="progress-segment ${segmentClass}" style="width: ${segmentWidth}%;" title="${title}" aria-label="${ariaLabel}" role="img"></div>`;
+            }
+        }
         
         surahItem.innerHTML = `
             <div class="surah-checkbox-container">
@@ -250,7 +298,7 @@ function updateSurahList() {
                        ${isFullyMemorized ? 'checked' : ''}
                        data-surah-id="${surahId}"
                        aria-label="Mark ${surah.transliteration} as fully memorized">
-                <label for="checkbox-${surahId}" class="checkbox-label" tabindex="0" role="checkbox" aria-checked="${isFullyMemorized}">✓</label>
+                <label for="checkbox-${surahId}" class="checkbox-label">✓</label>
             </div>
             <div class="surah-info-container">
                 <div class="surah-header">
@@ -261,16 +309,19 @@ function updateSurahList() {
                 <div class="surah-meta">
                     <span class="surah-type">${surah.type.charAt(0).toUpperCase() + surah.type.slice(1)}</span>
                     <span class="surah-verses">${surah.total_verses} verses</span>
-                    ${ayahList.length > 0 ? `<span class="surah-progress-text">${ayahList.length}/${surah.total_verses} verses</span>` : ''}
+                    ${ayahList.length > 0 ? `<span class="surah-progress-text">${ayahList.length}/${surah.total_verses} memorized</span>` : ''}
                 </div>
+                ${segmentMarkup ? `<div class="surah-progress-bar" role="progressbar" aria-valuenow="${percent.avg.toFixed(1)}" aria-valuemin="0" aria-valuemax="100" aria-label="Memorization progress: ${percent.avg.toFixed(1)}%">
+                    ${segmentMarkup}
+                </div>` : ''}
             </div>
             <div class="surah-input-container">
                 <input type="text" 
                        class="ayah-input" 
                        placeholder="e.g., 1-10, 1,3,5"
                        value="${ayahString && ayahString !== 'F' && ayahString !== 'f' ? ayahString : ''}"
-                       ${isFullyMemorized ? 'disabled' : ''}
                        data-surah-id="${surahId}"
+                       ${isFullyMemorized ? 'disabled' : ''}
                        aria-label="Ayah range for ${surah.transliteration}">
             </div>
             <div class="surah-percent-container">
@@ -280,20 +331,10 @@ function updateSurahList() {
         
         // Attach event listeners
         const checkbox = surahItem.querySelector('.surah-checkbox');
-        const checkboxLabel = surahItem.querySelector('.checkbox-label');
         const input = surahItem.querySelector('.ayah-input');
         
         checkbox.addEventListener('change', (e) => {
             handleCheckboxChange(surahId, e.target.checked, input);
-        });
-        
-        // Keyboard support for checkbox label
-        checkboxLabel.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                checkbox.checked = !checkbox.checked;
-                checkbox.dispatchEvent(new Event('change'));
-            }
         });
         
         input.addEventListener('blur', (e) => {
@@ -312,19 +353,15 @@ function updateSurahList() {
 
 // Handle checkbox change
 function handleCheckboxChange(surahId, isChecked, inputElement) {
-    const checkboxLabel = document.querySelector(`label[for="checkbox-${surahId}"]`);
-    
     if (isChecked) {
         // Mark as fully memorized
         progressData[currentMode][surahId] = 'F';
         inputElement.value = '';
         inputElement.disabled = true;
-        if (checkboxLabel) checkboxLabel.setAttribute('aria-checked', 'true');
     } else {
         // Uncheck - clear progress
         delete progressData[currentMode][surahId];
         inputElement.disabled = false;
-        if (checkboxLabel) checkboxLabel.setAttribute('aria-checked', 'false');
     }
     saveProgressToStorage();
     updateUI();
@@ -339,12 +376,6 @@ function handleAyahInputChange(surahId, value, checkboxElement) {
         delete progressData[currentMode][surahId];
         checkboxElement.checked = false;
     } else {
-        // Validate input format (only allow numbers, commas, hyphens, F, and spaces)
-        if (!/^[0-9,\-\sFf]+$/.test(trimmedValue) && trimmedValue !== 'F' && trimmedValue !== 'f') {
-            alert('Invalid ayah range format. Only numbers, commas, and hyphens are allowed.');
-            return;
-        }
-        
         // Validate and save
         try {
             const ayahList = getAyahList(surahId, trimmedValue);
@@ -414,38 +445,12 @@ function importData(event) {
     reader.onload = (e) => {
         try {
             const imported = JSON.parse(e.target.result);
-            
-            // Validate structure
-            if (!imported || typeof imported !== 'object') {
-                alert('Invalid data format.');
-                return;
-            }
-            
             if (imported.memorization || imported.reading) {
-                // Validate and sanitize imported data
-                const sanitized = {
-                    memorization: {},
-                    reading: {}
-                };
-                
-                ['memorization', 'reading'].forEach(mode => {
-                    if (imported[mode] && typeof imported[mode] === 'object') {
-                        Object.keys(imported[mode]).forEach(surahId => {
-                            const id = parseInt(surahId);
-                            // Validate surah ID is in valid range
-                            if (id >= 1 && id <= 114) {
-                                const value = imported[mode][surahId];
-                                // Only allow string values with valid characters
-                                if (typeof value === 'string' && /^[0-9,\-\sFf]+$/.test(value)) {
-                                    sanitized[mode][id] = value;
-                                }
-                            }
-                        });
-                    }
-                });
-                
                 if (confirm('This will replace your current progress. Continue?')) {
-                    progressData = sanitized;
+                    progressData = imported;
+                    // Ensure both modes exist
+                    if (!progressData.memorization) progressData.memorization = {};
+                    if (!progressData.reading) progressData.reading = {};
                     saveProgressToStorage();
                     updateUI();
                     alert('Data imported successfully!');
